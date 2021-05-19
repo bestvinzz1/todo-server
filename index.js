@@ -2,8 +2,8 @@ const express = require('express')
 const app = express()
 const mysql = require('mysql')
 const cors = require('cors')
+const bodyparser = require('body-parser')
 
-app.use(express.urlencoded())
 const corsOptions ={
     origin:'*',
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
@@ -18,6 +18,8 @@ const conn = mysql.createConnection({
     database:'develop'
 })
 app.use(cors(corsOptions))
+app.use(bodyparser.urlencoded())
+app.use(bodyparser.json())
 
 conn.connect(function(err){
     if(err)

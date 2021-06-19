@@ -1,6 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const mysql = require('mysql')
+const bcrypt = require('bcrypt')
+const saltRounds = 10
+
+const auth = require('../middlewares/auth.js')
 
 router.use(express.json())
 router.use(express.urlencoded())
@@ -17,31 +21,57 @@ conn.connect(function(err){
         throw err
 })
 
-router.get('/user', function (req, res) {
-    res.send(`
-        <html>
-            <form action="/user" method="POST">
-                <label>Username</label>
-                <input name = "username"></input>
-                <label>Password</label>
-                <input name = "password" type = "password"></input>
-                <button>Submit</button>
-            </form>
-        </html>
-    `)
-})
+// router.get('/user', function (req, res) {
+//     res.send(`
+//         <html>
+//             <form action="/user" method="POST">
+//                 <label>Username</label>
+//                 <input name = "username"></input>
+//                 <label>Password</label>
+//                 <input name = "password" type = "password"></input>
+//                 <button>Submit</button>
+//             </form>
+//         </html>
+//     `)
+// })
 
-router.post('/user',function(req,res){
-    const sql = `INSERT INTO users (username, password) VALUES (\'${req.body.username}\', \'${req.body.password}\')`
-    conn.query(sql,function(err){
-        if(err) 
+router.post('/',function(req,res,next){
+    const sql = `SELECT * FROM users`
+    conn.query(sql, function(err,result){
+        if(err)
             throw err
-        console.log('User Added')
+        if(result.length > 0)
+            auth(req,res,next)
+        else
+            next()
     })
-    res.sendStatus(200)
+},function(req,res){
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+        bcrypt.hash(req.body.password, salt, function (err, hash) {
+            const sql = "INSERT INTO users(username, password) VALUES ('" + req.body.username + "' , '" + hash + "')"
+            conn.query(sql, function (err) {
+                if (err) throw err
+                console.log("1 record inserted")
+                res.end()
+            })
+        })
+    })
 })
 
-router.get('/users',function(req,res){
+// router.post('/', function (req,res){
+//     bcrypt.genSalt(saltRounds, function (err, salt) {
+//         bcrypt.hash(req.body.password, salt, function (err, hash) {
+//             const sql = "INSERT INTO users(username, password) VALUES ('" + req.body.username + "' , '" + hash + "')"
+//             conn.query(sql, function (err) {
+//                 if (err) throw err
+//                 console.log("1 record inserted")
+//                 res.end()
+//             })
+//         })
+//     })
+// })
+
+router.get('/',function(req,res){
     const sql = 'SELECT * FROM users'
     conn.query(sql,function(err,result){
         if(err)
@@ -51,9 +81,19 @@ router.get('/users',function(req,res){
     })
 })
 
-router.delete('user/:id',function(req,res){
-    const query = `DELETE FROM users WHERE id=\'${req.params.id}\'`
-    conn.query(query,function(err,result){
+router.delete('/:id',(req,res,next) => {
+    const sql = 'SELECT * FROM users'
+    conn.query(sql, function(err,result){
+        if(err)
+            throw err
+        else if(result.length > 1)
+            next()
+        else
+            res.sendStatus(401)
+    })
+},function(req,res){
+    const sql = `DELETE FROM users WHERE Name=\'${req.params.id}\'`
+    conn.query(sql,function(err,result){
         if(err)
             throw err
         res.send("User Deleted")

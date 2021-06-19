@@ -2,8 +2,8 @@ const express = require('express')
 const router = express.Router()
 const mysql = require('mysql')
 
-router.use(express.json())
-router.use(express.urlencoded())
+// router.use(express.json())
+// router.use(express.urlencoded())
 
 const conn = mysql.createConnection({
     host:'localhost',
@@ -17,17 +17,17 @@ conn.connect(function(err){
         throw err
 })
 
-router.get('/', function(req,res){
-    res.send(`
-        <form method="POST" action="/todo">
-            <input name="nama"/>
-            <input type="submit" value="tambahkan"/>
-        </form>
-    `)
-})
+// router.get('/', function(req,res){
+//     res.send(`
+//         <form method="POST" action="/todo">
+//             <input Name="Name"/>
+//             <input type="submit" value="tambahkan"/>
+//         </form>
+//     `)
+// })
 
-router.post('/todo',function(req,res){
-    const sql = `INSERT INTO items (nama) VALUES (\'${req.body.nama}\')`
+router.post('/',function(req,res){
+    const sql = `INSERT INTO data (Name) VALUES (\'${req.body.Name}\')`
     conn.query(sql,function(err){
         if(err) 
             throw err
@@ -36,8 +36,8 @@ router.post('/todo',function(req,res){
     res.sendStatus(200)
 })
 
-router.get('/todo',function(req,res){
-    const sql = 'SELECT * FROM items'
+router.get('/',function(req,res){
+    const sql = 'SELECT * FROM data'
     conn.query(sql,function(err,result){
         if(err)
             throw err
@@ -46,8 +46,8 @@ router.get('/todo',function(req,res){
     })
 })
 
-router.delete('/todo/:nama',function(req,res){
-    const query = `DELETE FROM items WHERE nama=\'${req.params.nama}\'`
+router.delete('/:Name',function(req,res){
+    const query = `DELETE FROM data WHERE Name=\'${req.params.Name}\'`
     conn.query(query,function(err,result){
         if(err)
             throw err
